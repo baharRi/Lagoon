@@ -2,16 +2,14 @@ import pygame
 import json
 from pathlib import Path
 
+from player import Player
+from global_settings import (
+    TILE_SIZE, 
+    FLOOR_COLOR, WALL_COLOR, WARP_COLOR, PLAYER_COLOR,
+)
+
 #setting up
 pygame.init()
-
-TILE_SIZE = 32
-SPEED = 4
-
-FLOOR_COLOR = (150, 130, 117)
-WALL_COLOR = (33, 21, 21)
-WARP_COLOR = (233, 220, 182)
-PLAYER_COLOR = (120, 30, 30)
 
 screen = pygame.display.set_mode((25 * TILE_SIZE, 18 * TILE_SIZE))
 pygame.display.set_caption("Lagoon")
@@ -58,10 +56,10 @@ def start_map(name, col=None, row=None):
     map_data = MAPS[name]
     if col is None: 
         col, row = map_data["start"]
-    player.topleft = (col * TILE_SIZE + 4, row * TILE_SIZE + 4) 
+    player.place_at(col, row)
     return map_data
 
-player = pygame.Rect(0, 0, 24, 24)
+player = Player()
 map = start_map("map1")
 
 #game loop
@@ -70,36 +68,27 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_j:
+                player.take_damage(10)
+            elif event.key == pygame.K_k:
+                player.heal(10)
 
-    #movement for wasd and arrow keys
-    keys = pygame.key.get_pressed()
-    dx = ((keys[pygame.K_d] or keys[pygame.K_RIGHT]) - (keys[pygame.K_a] or keys[pygame.K_LEFT])) * SPEED
-    dy = ((keys[pygame.K_s] or keys[pygame.K_DOWN]) - (keys[pygame.K_w] or keys[pygame.K_UP])) * SPEED
 
-    player.x += dx
-    for wall in map["walls"]:
-        if player.colliderect(wall):
-            if dx > 0:
-                player.right = wall.left
-            elif dx < 0:
-                player.left = wall.right
-
-    player.y += dy
-    for wall in map["walls"]:
-        if player.colliderect(wall):
-            if dy > 0:
-                player.bottom = wall.top
-            elif dy < 0:
-                player.top = wall.bottom
+    if player.alive:
+        dx, dy = player.read_input()
+        player.move(dx, dy, map["walls"])
 
     #warps
     for rect, warp in map["warps"]:
-        if player.colliderect(rect) and warp["to"] in MAPS:
+        if player.rect.colliderect(rect) and warp["to"] in MAPS:
             map = start_map(warp["to"], warp.get("to_x"), warp.get("to_y"))
             break
 
+    #drawing everything
     screen.blit(map["background"], (0, 0))
-    pygame.draw.rect(screen, PLAYER_COLOR, player)
+    player.draw(screen)
+    player.draw_health_bar(screen)
     pygame.display.flip()
     clock.tick(60)
 

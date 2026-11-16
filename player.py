@@ -1,6 +1,14 @@
+from turtle import width
+
 import pygame
 
-from main import TILE_SIZE
+from global_settings import (
+    TILE_SIZE, 
+    PLAYER_COLOR, 
+    BAR_BG_COLOR, BAR_FILL_COLOR, BAR_BORDER_COLOR,
+)
+
+
 class Player: 
     def __init__(self):
         self.rect = pygame.Rect(0, 0, 24, 24)
@@ -25,3 +33,37 @@ class Player:
 
     def reset(self):
         self.health = self.max_health
+
+    #reading movement for wasd and arrow keys
+    def read_input(self):
+        keys = pygame.key.get_pressed()
+        dx = ((keys[pygame.K_d] or keys[pygame.K_RIGHT]) - (keys[pygame.K_a] or keys[pygame.K_LEFT])) * self.speed
+        dy = ((keys[pygame.K_s] or keys[pygame.K_DOWN]) - (keys[pygame.K_w] or keys[pygame.K_UP])) * self.speed
+        return dx, dy
+
+    def move(self, dx, dy, walls):
+        self.rect.x += dx
+        for wall in walls:
+            if self.rect.colliderect(wall):
+                if dx > 0:
+                    self.rect.right = wall.left
+                elif dx < 0:
+                    self.rect.left = wall.right
+
+        self.rect.y += dy
+        for wall in walls:
+            if self.rect.colliderect(wall):
+                if dy > 0:
+                    self.rect.bottom = wall.top
+                elif dy < 0:
+                    self.rect.top = wall.bottom
+
+    def draw(self, surface):
+        color = PLAYER_COLOR if self.alive else (100, 100, 100)
+        pygame.draw.rect(surface, color, self.rect)
+
+    def draw_health_bar(self, surface, x=10, y=10, width=200, height=20):
+        fraction = self.health / self.max_health
+        pygame.draw.rect(surface, BAR_BG_COLOR, (x, y, width, height))
+        pygame.draw.rect(surface, BAR_FILL_COLOR, (x, y, int(width * fraction), height))
+        pygame.draw.rect(surface, BAR_BORDER_COLOR, (x, y, width, height), 2)

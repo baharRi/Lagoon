@@ -4,10 +4,8 @@ import pygame
 
 from global_settings import (
     TILE_SIZE, 
-    PLAYER_COLOR, 
     BAR_BG_COLOR, BAR_FILL_COLOR, BAR_BORDER_COLOR,
 )
-
 
 class Player: 
     def __init__(self):
@@ -15,6 +13,13 @@ class Player:
         self.speed = 4
         self.max_health = 100
         self.health = self.max_health
+
+        self.images = {}
+        for direction in {"front", "back", "left", "right"}:
+            image = pygame.image.load(f"assets/player/player_{direction}.png").convert_alpha()
+            self.images[direction] = pygame.transform.scale(image, (28, 28))
+
+        self.facing = "front"
 
     @property
     def alive(self): 
@@ -43,6 +48,10 @@ class Player:
 
     def move(self, dx, dy, walls):
         self.rect.x += dx
+        if dx > 0:
+            self.facing = "right"
+        elif dx < 0:
+            self.facing = "left"
         for wall in walls:
             if self.rect.colliderect(wall):
                 if dx > 0:
@@ -51,6 +60,10 @@ class Player:
                     self.rect.left = wall.right
 
         self.rect.y += dy
+        if dy > 0:
+            self.facing = "front"
+        elif dy < 0:
+            self.facing = "back"
         for wall in walls:
             if self.rect.colliderect(wall):
                 if dy > 0:
@@ -59,8 +72,8 @@ class Player:
                     self.rect.top = wall.bottom
 
     def draw(self, surface):
-        color = PLAYER_COLOR if self.alive else (100, 100, 100)
-        pygame.draw.rect(surface, color, self.rect)
+        image = self.images[self.facing]
+        surface.blit(image, self.rect)
 
     def draw_health_bar(self, surface, x=10, y=10, width=200, height=20):
         fraction = self.health / self.max_health

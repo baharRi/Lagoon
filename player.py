@@ -73,7 +73,12 @@ class Player:
 
     def draw(self, surface):
         image = self.images[self.facing]
-        surface.blit(image, self.rect)
+        if not self.alive:
+            overlay = pygame.mask.from_surface(image).to_surface(
+                setcolor=(200, 0, 0, 110), unsetcolor=(0, 0, 0, 0)
+            )
+            surface.blit(overlay, self.rect)
+        else: surface.blit(image, self.rect)
 
     def draw_health_bar(self, surface, x=10, y=10, width=200, height=20):
         fraction = self.health / self.max_health

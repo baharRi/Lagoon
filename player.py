@@ -3,41 +3,44 @@ from turtle import width
 import pygame
 
 from global_settings import (
+    FPS,
     TILE_SIZE, 
     BAR_BG_COLOR, BAR_FILL_COLOR, BAR_BORDER_COLOR,
 )
+from entity import Entity
 
-class Player: 
+class Player(Entity):
     def __init__(self):
-        self.rect = pygame.Rect(0, 0, 24, 24)
+        self.rect = pygame.Rect(0, 0, 28, 28)
         self.speed = 4
+        self.invincible_frames = 0
         self.max_health = 100
         self.health = self.max_health
 
         self.images = {}
+        self.hit_images = {}
         for direction in {"front", "back", "left", "right"}:
             image = pygame.image.load(f"assets/player/player_{direction}.png").convert_alpha()
             self.images[direction] = pygame.transform.scale(image, (28, 28))
+            self.hit_images[direction] = pygame.mask.from_surface(self.images[direction]).to_surface(
+                setcolor=(255, 255, 255, 110), unsetcolor=(0, 0, 0, 0)
+            )
 
         self.facing = "front"
 
-    @property
-    def alive(self): 
-        return self.health > 0
-    
-    def place_at(self, col, row):
-        self.rect.topleft = (col * TILE_SIZE + 4, row * TILE_SIZE + 4)
-
     def take_damage(self, amount):
-        if not self.alive:
+        if self.invincible_frames > 0 or not self.alive:
             return
         self.health -= amount
-
-    def heal(self, amount): 
-        if self.alive: self.health = min(self.max_health, self.health + amount)
+        self.invincible_frames = FPS  #set invincibility frames
 
     def reset(self):
         self.health = self.max_health
+        self.invincible_frames = 0
+
+    def update(self):
+        if self.invincible_frames > 0:
+            self.invincible_frames -= 1
 
     #reading movement for wasd and arrow keys
     def read_input(self):
@@ -78,6 +81,8 @@ class Player:
                 setcolor=(200, 0, 0, 110), unsetcolor=(0, 0, 0, 0)
             )
             surface.blit(overlay, self.rect)
+        elif self.invincible_frames > 0 and (self.invincible_frames // 5) % 2 == 0:
+            image = self.hit_images[self.facing]
         else: surface.blit(image, self.rect)
 
     def draw_health_bar(self, surface, x=10, y=10, width=200, height=20):

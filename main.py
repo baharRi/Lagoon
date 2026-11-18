@@ -4,8 +4,9 @@ from pathlib import Path
 
 from player import Player
 from global_settings import (
+    FPS,
     TILE_SIZE, 
-    FLOOR_COLOR, WALL_COLOR, WARP_COLOR, PLAYER_COLOR,
+    FLOOR_COLOR, WALL_COLOR, WARP_COLOR,
 )
 
 #setting up
@@ -85,11 +86,12 @@ while running:
             map = start_map(warp["to"], warp.get("to_x"), warp.get("to_y"))
             break
 
+    player.update()
     #drawing everything
     screen.blit(map["background"], (0, 0))
     player.draw(screen)
     player.draw_health_bar(screen)
     pygame.display.flip()
-    clock.tick(60)
+    clock.tick(FPS)
 
 pygame.quit()

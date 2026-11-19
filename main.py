@@ -28,7 +28,6 @@ def load_map(path):
             if char == "#": 
                 walls.append(pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE))
 
-
     warps = []
     for warp in data.get("warps", []):
         rect = pygame.Rect(warp["x"] * TILE_SIZE, warp["y"] * TILE_SIZE, TILE_SIZE, TILE_SIZE)
@@ -75,7 +74,6 @@ while running:
             elif event.key == pygame.K_k:
                 player.heal(10)
 
-
     if player.alive:
         dx, dy = player.read_input()
         player.move(dx, dy, map["walls"])
@@ -87,6 +85,7 @@ while running:
             break
 
     player.update()
+    
     #drawing everything
     screen.blit(map["background"], (0, 0))
     player.draw(screen)

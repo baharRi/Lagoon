@@ -2,6 +2,7 @@ import pygame
 import json
 from pathlib import Path
 
+from enemy import Enemy
 from player import Player
 from global_settings import (
     FPS,
@@ -17,7 +18,7 @@ pygame.display.set_caption("Lagoon")
 clock = pygame.time.Clock()
 font = pygame.font.Font(None, 28)
 
-#reading a JSON map and building the layout
+#reading a json map and building the layout
 def load_map(path):
     data = json.loads(path.read_text())
     tiles = data["tiles"]
@@ -33,6 +34,10 @@ def load_map(path):
         rect = pygame.Rect(warp["x"] * TILE_SIZE, warp["y"] * TILE_SIZE, TILE_SIZE, TILE_SIZE)
         warps.append((rect, warp))
 
+    enemies = []
+    for enemy in data.get("enemies", []):
+        enemies.append(Enemy(enemy["x"], enemy["y"]))
+
     #draw the map
     background = pygame.Surface((len(tiles[0]) * TILE_SIZE, len(tiles) * TILE_SIZE))
     background.fill(FLOOR_COLOR)
@@ -42,7 +47,7 @@ def load_map(path):
     for rect, _ in warps:
         pygame.draw.rect(background, WARP_COLOR, rect, 3)
 
-    return {"walls": walls, "warps": warps, "start": data["start"], "background": background}
+    return {"walls": walls, "warps": warps, "start": data["start"], "background": background, "enemies": enemies}
 
 #load the json files
 MAPS = {path.stem: load_map(path) for path in sorted(Path("maps").glob("*.json"))}
@@ -90,6 +95,10 @@ while running:
     screen.blit(map["background"], (0, 0))
     player.draw(screen)
     player.draw_health_bar(screen)
+    for enemy in map["enemies"]:
+        enemy.update(player, map["walls"])
+        enemy.draw(screen)
+
     pygame.display.flip()
     clock.tick(FPS)
 

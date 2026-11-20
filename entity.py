@@ -40,16 +40,46 @@ class Entity:
         self.rect.topleft = (col * TILE_SIZE + 4, row * TILE_SIZE + 4)
     
     def take_damage(self, amount):
-        if not self.alive:
+        if self.invincible_frames > 0 or not self.alive:
             return
-        self.health -= amount
+        self.health = max(0, self.health - amount)
+        self.invincible_frames = self.INVINCIBLE_FRAMES
 
     def heal(self, amount):
         if self.alive:
             self.health = min(self.MAX_HEALTH, self.health + amount)
+
+    def update(self):
+        if self.invincible_frames > 0:
+            self.invincible_frames -= 1
 
     def draw(self, surface):
         image = self.images[self.facing]
         if self.alive and self.invincible_frames > 0 and (self.invincible_frames // 5) % 2 == 0:
             image = self.hit_images[self.facing]
         surface.blit(image, self.rect)
+
+    def move(self, dx, dy, walls):
+            self.rect.x += dx
+            if dx > 0:
+                self.facing = "right"
+            elif dx < 0:
+                self.facing = "left"
+            for wall in walls:
+                if self.rect.colliderect(wall):
+                    if dx > 0:
+                        self.rect.right = wall.left
+                    elif dx < 0:
+                        self.rect.left = wall.right
+    
+            self.rect.y += dy
+            if dy > 0:
+                self.facing = "front"
+            elif dy < 0:
+                self.facing = "back"
+            for wall in walls:
+                if self.rect.colliderect(wall):
+                    if dy > 0:
+                        self.rect.bottom = wall.top
+                    elif dy < 0:
+                        self.rect.top = wall.bottom

@@ -7,12 +7,21 @@ from global_settings import (
     BAR_BG_COLOR, BAR_FILL_COLOR, BAR_BORDER_COLOR,
 )
 from entity import Entity
+from inventory import Inventory
+from items import Weapon
 
 class Player(Entity):
     SPEED = 4
     MAX_HEALTH = 100
     INVINCIBLE_FRAMES = FPS  #1 sec of invincibility after taking damage
     SPRITE_PREFIX = "player"
+
+    def __init__(self):
+        super().__init__()
+        self.inventory = Inventory()
+        self.attack_cooldown = 0
+        self.slash_frames = 0
+        self.slash_rect = None
 
     def reset(self):
         self.health = self.MAX_HEALTH
@@ -27,6 +36,8 @@ class Player(Entity):
 
     def draw(self, surface):
         super().draw(surface)
+        if self.slash_frames > 0:
+            pygame.draw.rect(surface, (255, 255, 255), self.slash_rect, 2) #hitbox. TODO: add anim/sword slash
         if not self.alive:
             overlay = pygame.mask.from_surface(self.images[self.facing]).to_surface(
                 setcolor=(200, 0, 0, 110), unsetcolor=(0, 0, 0, 0)
@@ -38,3 +49,22 @@ class Player(Entity):
         pygame.draw.rect(surface, BAR_BG_COLOR, (x, y, width, height))
         pygame.draw.rect(surface, BAR_FILL_COLOR, (x, y, int(width * fraction), height))
         pygame.draw.rect(surface, BAR_BORDER_COLOR, (x, y, width, height), 2)
+
+    def attack (self, enemies):
+        weapon = self.inventory.selected_item
+        if not isinstance(weapon, Weapon) or self.attack_cooldown > 0:
+            return
+        hitbox = weapon.get_hitbox(self.rect, self.facing)
+        for enemy in enemies:
+            if hitbox.colliderect(enemy.rect):
+                enemy.take_damage(weapon.DAMAGE)
+            self.attack_cooldown = weapon.COOLDOWN
+            self.slash_rect = hitbox
+            self.slash_frames = 6
+
+    def update(self):
+        super().update()
+        if self.attack_cooldown > 0:
+            self.attack_cooldown -=1
+        if self.slash_frames > 0:
+            self.slash_frames -= 1

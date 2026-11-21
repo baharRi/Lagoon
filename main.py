@@ -9,6 +9,7 @@ from global_settings import (
     TILE_SIZE, 
     FLOOR_COLOR, WALL_COLOR, WARP_COLOR,
 )
+from items import ITEM_TYPES
 
 #setting up
 pygame.init()
@@ -38,6 +39,14 @@ def load_map(path):
     for enemy in data.get("enemies", []):
         enemies.append(Enemy(enemy["x"], enemy["y"]))
 
+    items = []
+    for entry in data.get("items", []):
+        item_class = ITEM_TYPES.get(entry["type"])
+        if item_class is None:
+            print(f"Unknown item type")
+        else:
+            items.append(item_class(entry["x"], entry["y"]))
+
     #draw the map
     background = pygame.Surface((len(tiles[0]) * TILE_SIZE, len(tiles) * TILE_SIZE))
     background.fill(FLOOR_COLOR)
@@ -47,7 +56,7 @@ def load_map(path):
     for rect, _ in warps:
         pygame.draw.rect(background, WARP_COLOR, rect, 3)
 
-    return {"walls": walls, "warps": warps, "start": data["start"], "background": background, "enemies": enemies}
+    return {"walls": walls, "warps": warps, "start": data["start"], "background": background, "enemies": enemies, "items": items}
 
 #load the json files
 MAPS = {path.stem: load_map(path) for path in sorted(Path("maps").glob("*.json"))}
@@ -78,10 +87,20 @@ while running:
                 player.take_damage(10)
             elif event.key == pygame.K_k:
                 player.heal(10)
+            elif pygame.K_1 <= event.key <= pygame.K_8:
+                player.inventory.select(event.key - pygame.K_1)
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button ==  1:
+            player.attack(map["enemies"])
+
+    map["enemies"] = [e for e in map["enemies"] if e.alive]
 
     if player.alive:
         dx, dy = player.read_input()
         player.move(dx, dy, map["walls"])
+
+        for item in map["items"][:]:
+            if player.rect.colliderect(item.rect) and player.inventory.add(item):
+                map["items"].remove(item)
 
     #warps
     for rect, warp in map["warps"]:
@@ -95,6 +114,9 @@ while running:
     screen.blit(map["background"], (0, 0))
     player.draw(screen)
     player.draw_health_bar(screen)
+    player.inventory.draw(screen)
+    for item in map["items"]:
+        item.draw(screen)
     for enemy in map["enemies"]:
         enemy.update(player, map["walls"])
         enemy.draw(screen)

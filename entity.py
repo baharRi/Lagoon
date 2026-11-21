@@ -12,6 +12,7 @@ class Entity:
 
     def __init__(self):
         self.rect = pygame.Rect(0, 0, self.SIZE, self.SIZE)
+        self.pos = pygame.Vector2(self.rect.topleft) #exact fractal pos of entity
         self.health = self.MAX_HEALTH
         self.invincible_frames = 0
         self.facing = "front"
@@ -38,6 +39,7 @@ class Entity:
     
     def place_at(self, col, row):
         self.rect.topleft = (col * TILE_SIZE + 4, row * TILE_SIZE + 4)
+        self.pos.update(self.rect.topleft)
     
     def take_damage(self, amount):
         if self.invincible_frames > 0 or not self.alive:
@@ -60,26 +62,36 @@ class Entity:
         surface.blit(image, self.rect)
 
     def move(self, dx, dy, walls):
-            self.rect.x += dx
-            if dx > 0:
-                self.facing = "right"
-            elif dx < 0:
-                self.facing = "left"
-            for wall in walls:
-                if self.rect.colliderect(wall):
-                    if dx > 0:
-                        self.rect.right = wall.left
-                    elif dx < 0:
-                        self.rect.left = wall.right
-    
-            self.rect.y += dy
-            if dy > 0:
-                self.facing = "front"
-            elif dy < 0:
-                self.facing = "back"
-            for wall in walls:
-                if self.rect.colliderect(wall):
-                    if dy > 0:
-                        self.rect.bottom = wall.top
-                    elif dy < 0:
-                        self.rect.top = wall.bottom
+        direction = pygame.Vector2(dx, dy)
+        if direction.length_squared() > 0:
+            direction = direction.normalize() * self.SPEED
+
+        #x axis, horizontal
+        self.pos.x += direction.x
+        self.rect.x = round(self.pos.x)
+        if direction.x > 0:
+            self.facing = "right"
+        elif direction.x < 0:
+            self.facing = "left"
+        for wall in walls:
+            if self.rect.colliderect(wall):
+                if direction.x > 0:
+                    self.rect.right = wall.left
+                elif direction.x < 0:
+                    self.rect.left = wall.right
+                self.pos.x = self.rect.x
+        
+        #y axis, vertical
+        self.pos.y += direction.y
+        self.rect.y = round(self.pos.y)
+        if direction.y > 0:
+            self.facing = "front"
+        elif direction.y < 0:
+            self.facing = "back"
+        for wall in walls:
+            if self.rect.colliderect(wall):
+                if direction.y > 0:
+                    self.rect.bottom = wall.top
+                elif direction.y < 0:
+                    self.rect.top = wall.bottom
+                self.pos.y = self.rect.y

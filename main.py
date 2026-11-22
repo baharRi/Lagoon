@@ -19,6 +19,10 @@ pygame.display.set_caption("Lagoon")
 clock = pygame.time.Clock()
 font = pygame.font.Font(None, 28)
 
+    ##test
+wall_image = pygame.image.load("assets/environment/wall.png").convert()
+wall_image = pygame.transform.scale(wall_image, (TILE_SIZE, TILE_SIZE))
+
 #reading a json map and building the layout
 def load_map(path):
     data = json.loads(path.read_text())
@@ -52,7 +56,7 @@ def load_map(path):
     background.fill(FLOOR_COLOR)
 
     for wall in walls: 
-        pygame.draw.rect(background, WALL_COLOR, wall)
+        background.blit(wall_image, wall)
     for rect, _ in warps:
         pygame.draw.rect(background, WARP_COLOR, rect, 3)
 
@@ -89,6 +93,8 @@ while running:
                 player.heal(10)
             elif pygame.K_1 <= event.key <= pygame.K_8:
                 player.inventory.select(event.key - pygame.K_1)
+            elif event.key == pygame.K_e:
+                player.use_item()
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button ==  1:
             player.attack(map["enemies"])
 

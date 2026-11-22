@@ -24,6 +24,9 @@ class Inventory:
         self.items.append(item)
         return True
 
+    def remove(self, item):
+        self.items.remove(item)
+
     def select(self, index):
         if 0 <= index < self.MAX_CAPACITY:
             self.selected = index

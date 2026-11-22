@@ -5,6 +5,7 @@ from global_settings import TILE_SIZE
 class Item: 
     NAME = "Item"
     IMAGE = None
+    CONSUMABLE = False
 
     def __init__(self, col, row):
         size = TILE_SIZE - 8
@@ -18,11 +19,14 @@ class Item:
     def draw(self, surface):
         surface.blit(self.image, self.rect)
 
+    def use(self, player):
+        return False
+
 
 class Weapon(Item):
     DAMAGE = 10
     COOLDOWN = 20
-    REACH = 24
+    REACH = 32
 
     def get_hitbox(self, owner_rect, facing):
         hitbox = pygame.Rect(0, 0, self.REACH, self.REACH)
@@ -42,8 +46,22 @@ class Sword(Weapon):
 
     DAMAGE = 10
     COOLDOWN = 20
-    REACH = 24
+    REACH = 32
+
+class Potion(Item):
+    NAME = "Potion"
+    IMAGE = "potion.png"
+    COOLDOWN = 20
+    HEAL_AMOUNT = 20
+    CONSUMABLE = True
+
+    def use(self, player):
+        if player.health == player.MAX_HEALTH:
+            return False
+        player.heal(self.HEAL_AMOUNT)
+        return True
 
 ITEM_TYPES = {
     "sword": Sword,
+    "potion": Potion,
 }

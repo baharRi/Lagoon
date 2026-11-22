@@ -50,7 +50,7 @@ class Player(Entity):
         pygame.draw.rect(surface, BAR_FILL_COLOR, (x, y, int(width * fraction), height))
         pygame.draw.rect(surface, BAR_BORDER_COLOR, (x, y, width, height), 2)
 
-    def attack (self, enemies):
+    def attack(self, enemies):
         weapon = self.inventory.selected_item
         if not isinstance(weapon, Weapon) or self.attack_cooldown > 0:
             return
@@ -61,6 +61,13 @@ class Player(Entity):
             self.attack_cooldown = weapon.COOLDOWN
             self.slash_rect = hitbox
             self.slash_frames = 6
+    
+    def use_item(self):
+        item = self.inventory.selected_item
+        if item is None or not self.alive:
+            return
+        if item.use(self) and item.CONSUMABLE:
+            self.inventory.remove(item)
 
     def update(self):
         super().update()

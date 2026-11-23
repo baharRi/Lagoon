@@ -4,7 +4,6 @@ FPS = 60
 
 #global colors
 FLOOR_COLOR = (74, 125, 69)
-WALL_COLOR = (33, 21, 21)
 WARP_COLOR = (233, 220, 182)
 BAR_BG_COLOR = (60, 20, 20)
 BAR_FILL_COLOR = (200, 50, 50)

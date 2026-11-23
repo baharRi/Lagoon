@@ -13,8 +13,8 @@ class Item:
 
         image = pygame.image.load(f"assets/items/{self.IMAGE}").convert_alpha()
 
-        self.image = pygame.transform.scale(image, (size, size))        #shown on the ground
-        self.icon = pygame.transform.scale(image, (TILE_SIZE, TILE_SIZE))  #shown in the inventory
+        self.image = pygame.transform.scale(image, (size, size)) #shown on the ground
+        self.icon = pygame.transform.scale(image, (TILE_SIZE, TILE_SIZE)) #shown in the inventory
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)

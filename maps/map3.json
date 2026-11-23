@@ -22,5 +22,8 @@
   "start": [1, 1],
   "warps": [
     {"x": 0, "y": 2, "to": "map2", "to_x": 22, "to_y": 2}
+  ],
+    "items": [
+    {"x": 8, "y": 9, "type": "potion"}
   ]
 }

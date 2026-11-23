@@ -4,10 +4,11 @@ from pathlib import Path
 
 from enemy import Enemy
 from player import Player
+from nature import Tree
 from global_settings import (
     FPS,
     TILE_SIZE, 
-    FLOOR_COLOR, WALL_COLOR, WARP_COLOR,
+    FLOOR_COLOR, WARP_COLOR,
 )
 from items import ITEM_TYPES
 
@@ -19,9 +20,7 @@ pygame.display.set_caption("Lagoon")
 clock = pygame.time.Clock()
 font = pygame.font.Font(None, 28)
 
-    ##test
 wall_image = pygame.image.load("assets/environment/wall.png").convert()
-wall_image = pygame.transform.scale(wall_image, (TILE_SIZE, TILE_SIZE))
 
 #reading a json map and building the layout
 def load_map(path):
@@ -33,6 +32,11 @@ def load_map(path):
         for col, char in enumerate(line):
             if char == "#": 
                 walls.append(pygame.Rect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+    trees = []
+    for tree in data.get("trees", []):
+        tree = Tree(tree["x"], tree["y"])
+        trees.append(tree)
+        walls.append(tree.rect)
 
     warps = []
     for warp in data.get("warps", []):
@@ -60,7 +64,7 @@ def load_map(path):
     for rect, _ in warps:
         pygame.draw.rect(background, WARP_COLOR, rect, 3)
 
-    return {"walls": walls, "warps": warps, "start": data["start"], "background": background, "enemies": enemies, "items": items}
+    return {"walls": walls, "trees": trees, "warps": warps, "start": data["start"], "background": background, "enemies": enemies, "items": items}
 
 #load the json files
 MAPS = {path.stem: load_map(path) for path in sorted(Path("maps").glob("*.json"))}
@@ -114,18 +118,20 @@ while running:
             map = start_map(warp["to"], warp.get("to_x"), warp.get("to_y"))
             break
 
+    #updating so enemy follows player
+    for enemy in map["enemies"]:
+        enemy.update(player, map["walls"])
+
     player.update()
     
     #drawing everything
     screen.blit(map["background"], (0, 0))
-    player.draw(screen)
+
+    drawables = map["trees"] + map["enemies"] + map["items"] + [player]
+    for thing in sorted(drawables, key=lambda t:t.rect.bottom):
+        thing.draw(screen)
     player.draw_health_bar(screen)
     player.inventory.draw(screen)
-    for item in map["items"]:
-        item.draw(screen)
-    for enemy in map["enemies"]:
-        enemy.update(player, map["walls"])
-        enemy.draw(screen)
 
     pygame.display.flip()
     clock.tick(FPS)

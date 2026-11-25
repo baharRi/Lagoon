@@ -67,7 +67,7 @@ class Player(Entity):
         if item is None or not self.alive:
             return
         if item.use(self) and item.CONSUMABLE:
-            self.inventory.remove(item)
+            self.inventory.consume(item)
 
     def update(self):
         super().update()

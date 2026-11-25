@@ -11,6 +11,7 @@ class Inventory:
     def __init__(self):
         self.items = []
         self.selected = 0
+        self.font = pygame.font.Font(None, 22)
 
     @property
     def selected_item(self):
@@ -19,6 +20,12 @@ class Inventory:
         return None
 
     def add(self, item):
+        #if stackable, merge
+        if item.STACK > 1:
+            for slot_item in self.items:
+                if type(slot_item) is type(item) and slot_item.count < slot_item.STACK:
+                    slot_item.count +=1
+                    return True
         if len(self.items) >= self.MAX_CAPACITY:
             return False
         self.items.append(item)
@@ -26,6 +33,11 @@ class Inventory:
 
     def remove(self, item):
         self.items.remove(item)
+
+    def consume(self, item): #for stacks
+        item.count -=1 
+        if item.count <= 0:
+            self.remove(item)
 
     def select(self, index):
         if 0 <= index < self.MAX_CAPACITY:
@@ -40,5 +52,9 @@ class Inventory:
             if i < len(self.items):
                 icon = self.items[i].icon
                 surface.blit(icon, icon.get_rect(center=slot.center))
+                item = self.items[i]
+                if item.count > 1:
+                    label = self.font.render(str(item.count), True, (255, 255, 255))
+                    surface.blit(label, label.get_rect(bottomright=(slot.right - 4, slot.bottom - 2)))
             border = self.INV_SELECTED_COLOR if i == self.selected else self.INV_BORDER_COLOR
             pygame.draw.rect(surface, border, slot, 3)

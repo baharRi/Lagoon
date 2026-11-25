@@ -6,9 +6,11 @@ class Item:
     NAME = "Item"
     IMAGE = None
     CONSUMABLE = False
+    STACK = 1
 
     def __init__(self, col, row):
         size = TILE_SIZE - 8
+        self.count = 1
         self.rect = pygame.Rect(col * TILE_SIZE + 4, row * TILE_SIZE + 4, size, size)
 
         image = pygame.image.load(f"assets/items/{self.IMAGE}").convert_alpha()
@@ -54,6 +56,7 @@ class Potion(Item):
     COOLDOWN = 20
     HEAL_AMOUNT = 20
     CONSUMABLE = True
+    STACK = 5
 
     def use(self, player):
         if player.health == player.MAX_HEALTH:
